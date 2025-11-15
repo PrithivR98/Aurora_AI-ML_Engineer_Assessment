@@ -1,33 +1,26 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-# Prevent Python from writing .pyc files
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Install OS dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    git \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download spaCy model
+# spaCy model (redundant but safe)
 RUN python -m spacy download en_core_web_sm
 
-# Copy application code
+# Copy application files
 COPY . .
 
-# Cloud Run requires PORT=8080
+# Cloud Run expects service on $PORT
 ENV PORT=8080
 EXPOSE 8080
 
-# Start the FastAPI app
-CMD ["gunicorn", "app.main:app", \
-     "-k", "uvicorn.workers.UvicornWorker", \
-     "--workers", "1", \
-     "--bind", "0.0.0.0:8080"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
