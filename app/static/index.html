@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Member QA</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<h2>Member Q&A System</h2>
+
+<div class="container">
+    <input id="questionInput" type="text"
+           placeholder="e.g. Where is Lorenzo Cavalli going next?" />
+
+    <button onclick="askQuestion()">Ask</button>
+
+    <div id="answerBox" class="answer-box"></div>
+</div>
+
+<script>
+async function askQuestion() {
+    const q = document.getElementById("questionInput").value;
+    const box = document.getElementById("answerBox");
+    box.style.display = "none";
+
+    if (!q.trim()) {
+        box.innerHTML = "Please type a question.";
+        box.className = "answer-box error";
+        box.style.display = "block";
+        return;
+    }
+
+    try {
+        const response = await fetch("/ask?question=" + encodeURIComponent(q));
+        const data = await response.json();
+
+        box.className = "answer-box";
+        box.innerHTML = "<strong>Answer:</strong> " + data.answer;
+        box.style.display = "block";
+
+    } catch (err) {
+        box.innerHTML = "Server error: " + err;
+        box.className = "answer-box error";
+        box.style.display = "block";
+    }
+}
+</script>
+
+</body>
+</html>
