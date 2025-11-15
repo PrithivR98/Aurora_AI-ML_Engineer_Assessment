@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
+gunicorn
 httpx
 sentence-transformers
-torch          # CPU version is fine
 spacy
