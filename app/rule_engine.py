@@ -1,5 +1,3 @@
-# app/rule_engine.py
-
 import re
 
 def extract_date(text, nlp):
@@ -8,7 +6,6 @@ def extract_date(text, nlp):
     if dates:
         return dates[0]
 
-    # regex fallback
     match = re.search(
         r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b|\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b",
         text,

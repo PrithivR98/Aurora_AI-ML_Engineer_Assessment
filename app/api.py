@@ -1,5 +1,3 @@
-# app/api.py
-
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
@@ -12,21 +10,34 @@ from app.rule_engine import (
 )
 
 router = APIRouter()
-
 models = NLPModels()
 
 class AskResponse(BaseModel):
     answer: str
 
-
 @router.get("/ask", response_model=AskResponse)
 async def ask(question: str = Query(...)):
-    messages = await fetch_messages()
-    q_type = classify_question_type(question)
+    # Fetch all messages once
+    all_messages = await fetch_messages()
+
+    # ---- NEW: Extract PERSON ----
     target_person = extract_target_person(question, models.nlp)
 
+    # ---- NEW: Filter messages for that user ----
+    if target_person:
+        messages = [m for m in all_messages if m.get("user_name") == target_person]
+
+        # If no messages for that user → fallback
+        if not messages:
+            messages = all_messages
+    else:
+        messages = all_messages
+
+    # ---- Continue with semantic search only within filtered subset ----
+    q_type = classify_question_type(question)
     ranked = semantic_search(question, messages, models.embedder, top_k=5)
 
+    # ---- Extract answer as before ----
     for msg in ranked:
         text = msg["message"]
 
@@ -47,7 +58,8 @@ async def ask(question: str = Query(...)):
             rests = extract_restaurants(text)
             if rests:
                 name = target_person or msg["user_name"]
-                return AskResponse(answer=f"{name}'s favorite restaurants are: {', '.join(rests)}")
+                rest_list = ", ".join(rests)
+                return AskResponse(answer=f"{name}'s favorite restaurants are {rest_list}.")
 
-    # fallback
+    # fallback: return best matched message
     return AskResponse(answer=ranked[0]["message"])

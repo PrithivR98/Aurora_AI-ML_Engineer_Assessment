@@ -1,5 +1,3 @@
-# app/models.py
-
 import spacy
 from sentence_transformers import SentenceTransformer
 

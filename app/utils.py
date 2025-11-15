@@ -1,5 +1,3 @@
-# app/utils.py
-
 from sentence_transformers import util
 
 def semantic_search(question, messages, embedder, top_k=5):
